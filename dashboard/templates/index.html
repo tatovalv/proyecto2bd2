@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDELT Analytics Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Análisis de Eventos Mundiales — GDELT</h1>
+        <p class="subtitle">Pipeline: Loader → Spark → MongoDB</p>
+        <p class="meta">Última ejecución: <strong id="last-run">{{ last_run }}</strong></p>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab active" data-tab="overview">Resumen</button>
+        <button class="tab" data-tab="conflicts">Conflictos</button>
+        <button class="tab" data-tab="media">Medios</button>
+        <button class="tab" data-tab="actors">Actores</button>
+        <button class="tab" data-tab="gkg">GKG</button>
+        <button class="tab" data-tab="advanced">Avanzado</button>
+        <button class="tab" data-tab="conclusions">Conclusiones</button>
+    </nav>
+
+    <main>
+        <!-- RESUMEN -->
+        <section id="overview" class="panel active">
+            <h2>Resumen del Pipeline</h2>
+            <div id="summary-cards" class="cards"></div>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Top Países por Eventos</h3>
+                    <canvas id="chart-top-countries"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Densidad de Eventos por Hora (UTC)</h3>
+                    <canvas id="chart-hourly"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONFLICTOS -->
+        <section id="conflicts" class="panel">
+            <h2>Análisis de Conflictos</h2>
+            <div class="chart-grid">
+                <div class="chart-box wide">
+                    <h3>Mapa de Calor — Intensidad Goldstein por País</h3>
+                    <canvas id="chart-heatmap"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Pares de Países en Conflicto</h3>
+                    <canvas id="chart-conflict-pairs"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Conflictos por Etnia</h3>
+                    <canvas id="chart-ethnic"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Conflictos por Religión y Región</h3>
+                    <div id="table-religion" class="data-table"></div>
+                </div>
+                <div class="chart-box wide">
+                    <h3>Evolución QuadClass por Región</h3>
+                    <canvas id="chart-quadclass"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- MEDIOS -->
+        <section id="media" class="panel">
+            <h2>Cobertura Mediática</h2>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Correlación AvgTone vs NumSources</h3>
+                    <div id="correlation-info" class="stat-box"></div>
+                </div>
+                <div class="chart-box">
+                    <h3>Cobertura Mediática por País</h3>
+                    <canvas id="chart-media-coverage"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Diversidad de Fuentes por País</h3>
+                    <canvas id="chart-diversity"></canvas>
+                </div>
+                <div class="chart-box wide">
+                    <h3>Tendencia de Sentimiento (Promedio Móvil)</h3>
+                    <canvas id="chart-sentiment"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Noticias de Última Hora</h3>
+                    <div id="table-breaking" class="data-table"></div>
+                </div>
+                <div class="chart-box">
+                    <h3>Escalada de Eventos (24h)</h3>
+                    <div id="table-escalation" class="data-table"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ACTORES -->
+        <section id="actors" class="panel">
+            <h2>Interacciones entre Actores</h2>
+            <div class="chart-grid">
+                <div class="chart-box wide">
+                    <h3>Matriz de Interacción entre Tipos de Actores</h3>
+                    <canvas id="chart-actor-matrix"></canvas>
+                </div>
+                <div class="chart-box wide">
+                    <h3>Grafo Diplomático vs Conflicto</h3>
+                    <canvas id="chart-diplomatic"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Distribución CAMEO por Región</h3>
+                    <canvas id="chart-cameo"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- GKG -->
+        <section id="gkg" class="panel">
+            <h2>Global Knowledge Graph</h2>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Temas GKG por Continente</h3>
+                    <canvas id="chart-gkg-themes"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Organizaciones Más Mencionadas</h3>
+                    <canvas id="chart-organizations"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- AVANZADO -->
+        <section id="advanced" class="panel">
+            <h2>Análisis Avanzado</h2>
+            <div class="chart-grid">
+                <div class="chart-box">
+                    <h3>Rezago: Tono Mediático → Conflictos al Día Siguiente</h3>
+                    <canvas id="chart-lag"></canvas>
+                </div>
+                <div class="chart-box">
+                    <h3>Densidad Horaria de Eventos</h3>
+                    <canvas id="chart-hourly-adv"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONCLUSIONES -->
+        <section id="conclusions" class="panel">
+            <h2>Conclusiones del Análisis</h2>
+            <div class="conclusions">
+                <div class="conclusion-card">
+                    <h3>1. Concentración geográfica de conflictos</h3>
+                    <p>
+                        Los datos GDELT revelan que los conflictos con mayor intensidad (escala Goldstein negativa)
+                        se concentran en regiones específicas del Medio Oriente, África Subsahariana y partes de
+                        Asia. Los países con mayor frecuencia de eventos de conflicto bilateral muestran patrones
+                        persistentes que reflejan tensiones geopolíticas de largo plazo, no eventos aislados.
+                    </p>
+                </div>
+                <div class="conclusion-card">
+                    <h3>2. Cobertura mediática desproporcionada</h3>
+                    <p>
+                        Existe una correlación débil entre el tono promedio (AvgTone) y el número de fuentes que
+                        cubren un evento, lo que sugiere que la cantidad de cobertura no necesariamente refleja
+                        la gravedad percibida. Países como Estados Unidos y del norte de Europa presentan un
+                        índice de diversidad de fuentes significativamente mayor que regiones en desarrollo,
+                        indicando un sesgo mediático global hacia ciertos actores geopolíticos.
+                    </p>
+                </div>
+                <div class="conclusion-card">
+                    <h3>3. Escalada y detección temprana</h3>
+                    <p>
+                        El análisis de escalada detectó eventos con crecimiento acelerado de menciones en ventanas
+                        de 24 horas, así como noticias de última hora que pasan de 0 a más de 100 menciones en
+                        menos de una hora. Estos patrones, combinados con el análisis de rezago tonal, permiten
+                        identificar señales tempranas de crisis antes de que se manifiesten como conflictos
+                        materiales (QuadClass 4), demostrando el valor predictivo del monitoreo en tiempo real
+                        de GDELT.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Proyecto 2 — Bases de Datos II — TEC 2026 | Fuente: <a href="https://www.gdeltproject.org/" target="_blank">GDELT Project</a></p>
+    </footer>
+
+    <script src="/static/js/charts.js"></script>
+</body>
+</html>
